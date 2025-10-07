@@ -215,7 +215,7 @@ export default function Home() {
             Transform your writing with advanced AI-powered paraphrasing
           </p>
         </motion.div>
-        ={/* Controls Bar */}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
