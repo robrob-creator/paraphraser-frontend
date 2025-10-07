@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { motion } from "framer-motion";
 import {
@@ -20,7 +20,7 @@ import {
 // Declare AdSense global
 declare global {
   interface Window {
-    adsbygoogle: unknown[];
+    adsbygoogle: Array<Record<string, unknown>>;
   }
 }
 
@@ -34,137 +34,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// AdBanner Component using Google AdSense (robust: waits for container size, sets explicit small banner sizes)
-const AdBanner = ({ adSlot }: { adSlot: string }) => {
-  const adRef = useRef<HTMLDivElement>(null);
-  const [adStatus, setAdStatus] = useState<"idle" | "pushed" | "error">("idle");
-  const isDev = process.env.NODE_ENV !== "production";
-
-  useEffect(() => {
-    let pushed = false;
-    const current = adRef.current;
-
-    const setInsSizeAndPush = (insEl: HTMLElement, containerWidth: number) => {
-      // Choose a sensible banner height based on available width
-      // mobile: 320x50, small tablet: 468x60, desktop: 728x90
-      const width = Math.floor(containerWidth);
-      let height = 50;
-      if (width >= 728) height = 90;
-      else if (width >= 468) height = 60;
-
-      // Apply inline sizes so AdSense has a concrete slot
-      try {
-        insEl.style.display = "block";
-        insEl.style.width = `${Math.max(320, Math.min(width, 1024))}px`;
-        insEl.style.height = `${height}px`;
-      } catch {
-        // ignore styling errors
-      }
-
-      try {
-        if (!pushed && typeof window !== "undefined" && window.adsbygoogle) {
-          window.adsbygoogle = window.adsbygoogle || [];
-          window.adsbygoogle.push({});
-          pushed = true;
-          setAdStatus("pushed");
-        }
-      } catch (err) {
-        console.log("AdSense push error:", err);
-        setAdStatus("error");
-      }
-    };
-
-    const loadAd = () => {
-      const container = current || adRef.current;
-      if (!container) return;
-      const insEl = container.querySelector(
-        "ins.adsbygoogle"
-      ) as HTMLElement | null;
-      if (!insEl) return;
-
-      const rect = container.getBoundingClientRect();
-      if (rect.width > 0) {
-        setInsSizeAndPush(insEl, rect.width);
-      }
-    };
-
-    // IntersectionObserver: only attempt to load once visible
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            loadAd();
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (current) io.observe(current);
-
-    // ResizeObserver fallback to handle layout changes / responsive widths
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined" && current) {
-      ro = new ResizeObserver(() => {
-        // If not yet pushed, try to load again when size changes
-        if (!pushed) loadAd();
-      });
-      ro.observe(current);
-    }
-
-    // Window resize fallback
-    const onResize = () => {
-      if (!pushed) loadAd();
-    };
-    window.addEventListener("resize", onResize);
-
-    // Small timeout retry in case element gets sized after initial paint
-    const retryTimer = setTimeout(() => {
-      if (!pushed) loadAd();
-    }, 500);
-
-    return () => {
-      io.disconnect();
-      if (ro && current) ro.unobserve(current);
-      window.removeEventListener("resize", onResize);
-      clearTimeout(retryTimer);
-    };
-  }, [adSlot]);
-
-  return (
-    <div
-      ref={adRef}
-      className="ad-container w-full flex justify-center bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
-    >
-      <div className="relative w-full">
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client="ca-pub-5125116027192105"
-          data-ad-slot={adSlot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-          {...(isDev ? { "data-adtest": "on" } : {})}
-        />
-        {isDev && (
-          <div className="absolute top-1 right-1 bg-black bg-opacity-60 text-white text-xs px-2 py-0.5 rounded">
-            Ad:{adStatus}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const paraphraseStyles = [
-  { value: "formal", label: "Formal" },
-  { value: "casual", label: "Casual" },
-  { value: "creative", label: "Creative" },
-  { value: "academic", label: "Academic" },
+// Simple style options for paraphrasing
+const paraphraseStyles: { label: string; value: string }[] = [
+  { label: "Creative", value: "creative" },
+  { label: "Fluency", value: "fluency" },
+  { label: "Formal", value: "formal" },
+  { label: "Shorten", value: "shorten" },
 ];
 
+// AdBanner removed — placeholder kept for layout below
 export default function Home() {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
@@ -179,27 +57,7 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  // Initialize AdMob
-  useEffect(() => {
-    const initAdMob = async () => {
-      if (typeof window !== "undefined") {
-        // AdSense is already loaded in _document.tsx
-        // Just ensure ads are initialized
-        try {
-          // Small delay to ensure script is loaded
-          setTimeout(() => {
-            if (window.adsbygoogle) {
-              console.log("AdSense ready");
-            }
-          }, 1000);
-        } catch (error) {
-          console.log("AdSense initialization error:", error);
-        }
-      }
-    };
-
-    initAdMob();
-  }, []);
+  // Ad code removed
 
   // Check for dark mode preference
   useEffect(() => {
@@ -357,18 +215,7 @@ export default function Home() {
             Transform your writing with advanced AI-powered paraphrasing
           </p>
         </motion.div>
-
-        {/* Top Banner Ad */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-8"
-        >
-          <AdBanner adSlot="5908540367" />
-        </motion.div>
-
-        {/* Controls Bar */}
+        ={/* Controls Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -407,7 +254,6 @@ export default function Home() {
             )}
           </button>
         </motion.div>
-
         {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -588,7 +434,6 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
-
         {/* Alternative Versions */}
         {alternativeVersions.length > 0 && (
           <motion.div
@@ -649,7 +494,6 @@ export default function Home() {
             </div>
           </motion.div>
         )}
-
         {/* Error Message */}
         {error && (
           <motion.div
@@ -661,7 +505,6 @@ export default function Home() {
             <span>{error}</span>
           </motion.div>
         )}
-
         {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -709,17 +552,6 @@ export default function Home() {
             Try Sample
           </motion.button>
         </motion.div>
-
-        {/* Bottom Banner Ad */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-          className="mb-8"
-        >
-          <AdBanner adSlot="5908540367" />
-        </motion.div>
-
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
