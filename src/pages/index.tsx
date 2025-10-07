@@ -37,8 +37,8 @@ const geistMono = Geist_Mono({
 // AdBanner Component using Google AdSense (robust: waits for container size, sets explicit small banner sizes)
 const AdBanner = ({ adSlot }: { adSlot: string }) => {
   const adRef = useRef<HTMLDivElement>(null);
-  const [adStatus, setAdStatus] = useState<'idle' | 'pushed' | 'error'>('idle');
-  const isDev = process.env.NODE_ENV !== 'production';
+  const [adStatus, setAdStatus] = useState<"idle" | "pushed" | "error">("idle");
+  const isDev = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     let pushed = false;
@@ -66,11 +66,11 @@ const AdBanner = ({ adSlot }: { adSlot: string }) => {
           window.adsbygoogle = window.adsbygoogle || [];
           window.adsbygoogle.push({});
           pushed = true;
-          setAdStatus('pushed');
+          setAdStatus("pushed");
         }
       } catch (err) {
         console.log("AdSense push error:", err);
-        setAdStatus('error');
+        setAdStatus("error");
       }
     };
 
@@ -146,7 +146,7 @@ const AdBanner = ({ adSlot }: { adSlot: string }) => {
           data-ad-slot={adSlot}
           data-ad-format="auto"
           data-full-width-responsive="true"
-          {...(isDev ? { 'data-adtest': 'on' } : {})}
+          {...(isDev ? { "data-adtest": "on" } : {})}
         />
         {isDev && (
           <div className="absolute top-1 right-1 bg-black bg-opacity-60 text-white text-xs px-2 py-0.5 rounded">
